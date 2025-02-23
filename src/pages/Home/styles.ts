@@ -59,7 +59,8 @@ export const HeaderText = styled.div`
   margin-top: 20px;
 
   @media (max-width: 768px) {
-    font-size: 20px;
+    font-size: 18px;
+    max-width: 400px;
   }
 `;
 

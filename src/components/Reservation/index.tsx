@@ -15,6 +15,7 @@ import {
 
 import * as Styled from "./styles";
 import { IReservation } from "../../shared/types";
+import { formatDateToBR } from "../../shared/helpers/formatDate";
 
 const mockData: IReservation[] = [
   { id: 1, destination: "Paris", date: "2025-03-10" },
@@ -75,7 +76,14 @@ const ReservationList: React.FC = () => {
 
   const columns = [
     { title: "Destino", dataIndex: "destination", key: "destination" },
-    { title: "Data", dataIndex: "date", key: "date" },
+    {
+      title: "Data",
+      dataIndex: "date",
+      key: "date",
+      render: (_: any, record: IReservation) => (
+        <>{formatDateToBR(record.date)}</>
+      ),
+    },
     {
       title: "Ações",
       key: "actions",
