@@ -138,7 +138,9 @@ const ReservationList: React.FC = () => {
               type="date"
               fullWidth
               margin="normal"
-              InputLabelProps={{ shrink: true }}
+              inputRef={(input) => {
+                if (input) input.min = new Date().toISOString().split("T")[0];
+              }}
               {...register("date")}
               error={!!errors.date}
               helperText={errors.date?.message}
