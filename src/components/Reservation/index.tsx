@@ -16,6 +16,8 @@ import {
 import * as Styled from "./styles";
 import { IReservation } from "../../shared/types";
 import { formatDateToBR } from "../../shared/helpers/formatDate";
+import { create, exclude, get, update } from "../../services/reservations";
+import toast from "react-hot-toast";
 
 const mockData: IReservation[] = [
   { id: 1, destination: "Paris", date: "2025-03-10" },
@@ -45,15 +47,43 @@ const ReservationList: React.FC = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: IReservation) => {
-    if (editingReservation) {
-      setReservations(
-        reservations.map((res) =>
-          res.id === editingReservation.id ? { ...res, ...data } : res
-        )
-      );
-    } else {
-      setReservations([...reservations, { id: Date.now(), ...data }]);
+  const handleList = React.useCallback(async () => {
+    try {
+      const { status, data } = await get();
+
+      if ([200, 201].includes(status)) {
+        setReservations(data);
+        toast.success("Reservas listadas com sucesso!");
+      }
+    } catch (error) {
+      toast.error("Erro ao listar reservas");
+    }
+  }, []);
+
+  const onSubmit = async (formValue: IReservation) => {
+    try {
+      if (editingReservation) {
+        const { status } = await update(formValue);
+
+        if ([200, 201].includes(status)) {
+          toast.success("Reserva atualizada com sucesso!");
+        }
+
+        setReservations(
+          reservations.map((res) =>
+            res.id === editingReservation.id ? { ...res, ...formValue } : res
+          )
+        );
+      } else {
+        const { status } = await create(formValue);
+
+        if ([200, 201].includes(status)) {
+          toast.success("Reserva criada com sucesso!");
+        }
+        setReservations([...reservations, { id: Date.now(), ...formValue }]);
+      }
+    } catch (e) {
+      toast.error("Erro ao criar reserva");
     }
     closeModal();
   };
@@ -69,7 +99,16 @@ const ReservationList: React.FC = () => {
     setEditingReservation(null);
   };
 
-  const deleteReservation = (id: number) => {
+  const deleteReservation = async (id: number) => {
+    try {
+      const { status } = await exclude();
+      if ([200, 201].includes(status)) {
+        toast.success("Reserva excluída com sucesso!");
+      }
+    } catch (e) {
+      toast.error("Erro ao excluir reserva");
+    }
+
     setReservations(reservations.filter((res) => res.id !== id));
     setExcludeItem(0);
   };
@@ -100,6 +139,10 @@ const ReservationList: React.FC = () => {
       ),
     },
   ];
+
+  React.useEffect(() => {
+    handleList();
+  }, [handleList]);
 
   return (
     <Styled.ContainerPage maxWidth="xl">

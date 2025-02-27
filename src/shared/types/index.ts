@@ -3,3 +3,8 @@ export interface IReservation {
   destination: string;
   date: string;
 }
+
+export interface IReservationResponse {
+  data: IReservation[];
+  status: number;
+}
