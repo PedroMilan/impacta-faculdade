@@ -14,3 +14,7 @@ body {
     overflow-x: hidden;
   }
 }
+
+#reservation-form {
+  min-width: 300px;
+}

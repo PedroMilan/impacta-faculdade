@@ -1,6 +1,6 @@
 import React from "react";
 import { Table } from "antd";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {
@@ -11,6 +11,7 @@ import {
   DialogActions,
   Button,
   Alert,
+  Autocomplete,
 } from "@mui/material";
 
 import * as Styled from "./styles";
@@ -18,6 +19,19 @@ import { IReservation } from "../../shared/types";
 import { formatDateToBR } from "../../shared/helpers/formatDate";
 import { create, exclude, get, update } from "../../services/reservations";
 import toast from "react-hot-toast";
+
+const destinations = [
+  "Paris, França",
+  "Roma, Itália",
+  "Nova York, EUA",
+  "Tóquio, Japão",
+  "Londres, Reino Unido",
+  "Dubai, Emirados Árabes",
+  "Barcelona, Espanha",
+  "Singapura",
+  "Istambul, Turquia",
+  "Bangkok, Tailândia",
+];
 
 const schema = yup.object().shape({
   destination: yup.string().required("Destino é obrigatório"),
@@ -38,6 +52,7 @@ const ReservationList: React.FC = () => {
     handleSubmit,
     reset,
     formState: { errors },
+    control,
   } = useForm<IReservation>({
     resolver: yupResolver(schema),
   });
@@ -161,14 +176,31 @@ const ReservationList: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <form id="reservation-form" onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-              label="Destino"
-              fullWidth
-              margin="normal"
-              {...register("destination")}
-              error={!!errors.destination}
-              helperText={errors.destination?.message}
+            <Controller
+              name="destination"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <Autocomplete
+                  freeSolo
+                  options={destinations}
+                  value={field.value || ""} // 🔹 Garante que o valor seja preenchido corretamente
+                  onInputChange={(_, value) => field.onChange(value)}
+                  onChange={(_, value) => field.onChange(value)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Destino"
+                      fullWidth
+                      margin="normal"
+                      error={!!errors.destination}
+                      helperText={errors.destination?.message}
+                    />
+                  )}
+                />
+              )}
             />
+
             <TextField
               label="Data"
               type="date"
