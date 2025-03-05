@@ -19,24 +19,19 @@ import { formatDateToBR } from "../../shared/helpers/formatDate";
 import { create, exclude, get, update } from "../../services/reservations";
 import toast from "react-hot-toast";
 
-const mockData: IReservation[] = [
-  { id: 1, destination: "Paris", date: "2025-03-10" },
-  { id: 2, destination: "Nova York", date: "2025-04-15" },
-];
-
 const schema = yup.object().shape({
   destination: yup.string().required("Destino é obrigatório"),
   date: yup.string().required("Data é obrigatória"),
 });
 
 const ReservationList: React.FC = () => {
-  const [reservations, setReservations] =
-    React.useState<IReservation[]>(mockData);
+  const [reservations, setReservations] = React.useState<IReservation[]>([]);
   const [isModalOpen, setIsModalOpen] = React.useState<boolean>(false);
   const [editingReservation, setEditingReservation] =
     React.useState<IReservation | null>(null);
 
   const [excludeItem, setExcludeItem] = React.useState<number>(0);
+  const [isFetched, setIsFetched] = React.useState(false);
 
   const {
     register,
@@ -53,7 +48,6 @@ const ReservationList: React.FC = () => {
 
       if ([200, 201].includes(status)) {
         setReservations(data);
-        toast.success("Reservas listadas com sucesso!");
       }
     } catch (error) {
       toast.error("Erro ao listar reservas");
@@ -67,20 +61,15 @@ const ReservationList: React.FC = () => {
 
         if ([200, 201].includes(status)) {
           toast.success("Reserva atualizada com sucesso!");
+          handleList();
         }
-
-        setReservations(
-          reservations.map((res) =>
-            res.id === editingReservation.id ? { ...res, ...formValue } : res
-          )
-        );
       } else {
         const { status } = await create(formValue);
 
         if ([200, 201].includes(status)) {
           toast.success("Reserva criada com sucesso!");
+          handleList();
         }
-        setReservations([...reservations, { id: Date.now(), ...formValue }]);
       }
     } catch (e) {
       toast.error("Erro ao criar reserva");
@@ -101,15 +90,15 @@ const ReservationList: React.FC = () => {
 
   const deleteReservation = async (id: number) => {
     try {
-      const { status } = await exclude();
+      const { status } = await exclude(id);
       if ([200, 201].includes(status)) {
         toast.success("Reserva excluída com sucesso!");
+        handleList();
       }
     } catch (e) {
       toast.error("Erro ao excluir reserva");
     }
 
-    setReservations(reservations.filter((res) => res.id !== id));
     setExcludeItem(0);
   };
 
@@ -141,8 +130,12 @@ const ReservationList: React.FC = () => {
   ];
 
   React.useEffect(() => {
-    handleList();
-  }, [handleList]);
+    if (!isFetched) {
+      handleList();
+      setIsFetched(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFetched]);
 
   return (
     <Styled.ContainerPage maxWidth="xl">

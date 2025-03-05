@@ -2,12 +2,13 @@ import { IReservation, IReservationResponse } from "../../shared/types";
 import axiosInstance from "../Api";
 
 export const get = async (): Promise<IReservationResponse> =>
-  axiosInstance.get("/");
+  axiosInstance.get("/trips");
 
 export const create = async (data: IReservation) =>
-  axiosInstance.post("/", data);
+  axiosInstance.post("/trips", data);
 
 export const update = async (data: IReservation) =>
-  axiosInstance.put("/", data);
+  axiosInstance.put(`/trips/${data.id}`, data);
 
-export const exclude = async () => axiosInstance.delete("/");
+export const exclude = async (id: number) =>
+  axiosInstance.delete(`/trips/${id}`);
