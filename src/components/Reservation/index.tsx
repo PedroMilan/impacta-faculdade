@@ -15,23 +15,11 @@ import {
 } from "@mui/material";
 
 import * as Styled from "./styles";
-import { IReservation } from "../../shared/types";
+import { ILocation, IReservation } from "../../shared/types";
 import { formatDateToBR } from "../../shared/helpers/formatDate";
 import { create, exclude, get, update } from "../../services/reservations";
 import toast from "react-hot-toast";
-
-const destinations = [
-  "Paris, França",
-  "Roma, Itália",
-  "Nova York, EUA",
-  "Tóquio, Japão",
-  "Londres, Reino Unido",
-  "Dubai, Emirados Árabes",
-  "Barcelona, Espanha",
-  "Singapura",
-  "Istambul, Turquia",
-  "Bangkok, Tailândia",
-];
+import { getLocations } from "../../services/locations.ts";
 
 const schema = yup.object().shape({
   destination: yup.string().required("Destino é obrigatório"),
@@ -46,6 +34,8 @@ const ReservationList: React.FC = () => {
 
   const [excludeItem, setExcludeItem] = React.useState<number>(0);
   const [isFetched, setIsFetched] = React.useState(false);
+
+  const [destinations, setDestinations] = React.useState<ILocation[]>([]);
 
   const {
     register,
@@ -117,6 +107,18 @@ const ReservationList: React.FC = () => {
     setExcludeItem(0);
   };
 
+  const getLocals = React.useCallback(async () => {
+    try {
+      const { status, data } = await getLocations();
+
+      if ([200, 201].includes(status)) {
+        setDestinations(data);
+      }
+    } catch (error) {
+      toast.error("Erro ao listar locais");
+    }
+  }, []);
+
   const columns = [
     { title: "Destino", dataIndex: "destination", key: "destination" },
     {
@@ -152,6 +154,10 @@ const ReservationList: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFetched]);
 
+  React.useEffect(() => {
+    getLocals();
+  }, [getLocals]);
+
   return (
     <Styled.ContainerPage maxWidth="xl">
       <Button variant="contained" color="primary" onClick={() => openModal()}>
@@ -182,11 +188,24 @@ const ReservationList: React.FC = () => {
               defaultValue=""
               render={({ field }) => (
                 <Autocomplete
-                  freeSolo
                   options={destinations}
-                  value={field.value || ""} // 🔹 Garante que o valor seja preenchido corretamente
+                  getOptionLabel={(option) =>
+                    typeof option === "string"
+                      ? option
+                      : `${option.city}, ${option.country}`
+                  }
+                  freeSolo
+                  onChange={(_, value) => {
+                    if (typeof value === "string") {
+                      field.onChange(value);
+                    } else if (value && typeof value === "object") {
+                      field.onChange(`${value.city}, ${value.country}`);
+                    } else {
+                      field.onChange("");
+                    }
+                  }}
+                  inputValue={field.value}
                   onInputChange={(_, value) => field.onChange(value)}
-                  onChange={(_, value) => field.onChange(value)}
                   renderInput={(params) => (
                     <TextField
                       {...params}
